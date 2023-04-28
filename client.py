@@ -1,7 +1,6 @@
 import socket
 import re
 import sys
-# TODO: en main se debe de preguntar por el ip del servidor para el constructor.
 
 class Client:
     """
@@ -9,7 +8,8 @@ class Client:
     """
     def __init__(self,ip) -> None:
         """
-        :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje, todos los mensajes seran de 64 bytes. Facilita el encode/decode.
+        :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje,
+        todos los mensajes seran de 64 bytes. Facilita el encode/decode.
         :var PORT: Numero de puerto a usar.
         :var FORMAT: Formato de encode.
         :var DISCONNECT_MESSAGE: mensaje para la desconneción y cierre de sesion.
