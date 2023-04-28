@@ -1,5 +1,5 @@
 <p align="center">
-    <h1 align="center"/> Python FTP Cloud </h1>
+    <h1 align="center"/> Practica #1 distribuidos </h1>
 </p>
 
 
@@ -37,30 +37,20 @@
 ---
 ## Installation
 
-1. Download and install [Python 3.10.8](https://www.python.org/downloads/)
-2. Download (or clone) this repository.
-3. Once the repository is opened, access to the directory through terminal/cmd.
+##### Sin Poetry 
+1. Descargar e instalar [Python 3.10.8](https://www.python.org/downloads/)
+2. Descargar este repositorio, y correr `server.py` y `cliente.py`
 
 ##### With poetry:
-4. Run `poetry install` in the repository to install all the dependencies.
-##### Without poetry:
-4. Run `pip install -U mypy python-dotenv PyQt5 pyside2 pyftpdlib pydantic pywin32`.
->    You would need to install the exact versions that are described in the `project.toml`
+4. Correr `poetry install` ara installar las dependencias
 ---
 
-## Running the Server
-#### From your IDE
-* Click on `app.py` -> Run
+## Usar el servidor
+#### Desde tu IDE
+* Click en `server.py` -> Run
 
 ## Running a user client
-#### From your IDE
-* Click on `client.py`-> Run
+#### Desde tu IDE
+* Clickear en `client.py`-> Run
 
 
-## References
-
-
-
----
-## License
-* [GPL-3.0 license](https://github.com/ImMamey/python-personal-cloud-ftp/blob/master/LICENSE.md)
