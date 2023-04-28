@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "p1-ddb"
+version = "0.0.1"
+description = "Uni stuff"
+authors = ["ImMamey <32584037+ImMamey@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "p1_ddb"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
