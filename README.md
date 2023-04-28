@@ -36,13 +36,13 @@
 * [Mypy](http://mypy-lang.org/) (Opcional: solo para dessarrollo)
 * [Poetry](https://python-poetry.org/)
 ---
-## Installation
+## Installación
 
 ##### Sin Poetry 
 1. Descargar e instalar [Python 3.10.8](https://www.python.org/downloads/)
 2. Descargar este repositorio, y correr `server.py` y `cliente.py`
 
-##### With poetry:
+##### Con Poetry:
 4. Correr `poetry install` ara installar las dependencias
 ---
 
@@ -50,7 +50,7 @@
 #### Desde tu IDE
 * Click en `server.py` -> Run
 
-## Running a user client
+## Usar el Cliente
 #### Desde tu IDE
 * Clickear en `client.py`-> Run
 
