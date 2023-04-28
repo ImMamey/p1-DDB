@@ -1,11 +1,13 @@
 import socket
+import re
+import sys
 # TODO: en main se debe de preguntar por el ip del servidor para el constructor.
 
 class Client:
     """
     Contiene todos los metodos para el cliente.
     """
-    def __init__(self) -> None:
+    def __init__(self,ip) -> None:
         """
         :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje, todos los mensajes seran de 64 bytes. Facilita el encode/decode.
         :var PORT: Numero de puerto a usar.
@@ -19,7 +21,7 @@ class Client:
         self.PORT: int = 5555
         self.FORMAT: str = 'utf-8'
         self.DISCONNECT_MESSAGE: str = "!DISCONNECT"
-        self.SERVER: str = "192.168.56.1"
+        self.SERVER: str = ip #"192.168.56.1"
         self.ADDR: tuple = (self.SERVER, self.PORT)
 
         self.start()
@@ -35,6 +37,7 @@ class Client:
         except Exception as e:
             exception: str = f"{type(e).__name__}: (e)"
             print(f"Error al tratar de conectarse al servidor: \n{exception}")
+            sys.exit("El cliente se cerrará despues de el log....")
 
 
     def send(self, msg) -> None:
@@ -57,7 +60,17 @@ class Client:
 
 
 if __name__ == "__main__":
-    cl = Client()
+    detente: bool = False
+
+    while not detente:
+        ip: str= input("Escriba el ip del servidor:\n")
+        pattern = re.compile("^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+        if not pattern.match(ip):
+            print("La ip no es válida. Intente nuevamente: \n")
+        else:
+            detente = True
+
+    cl = Client(ip)
     detente: bool = False
 
     while not detente:
