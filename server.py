@@ -64,7 +64,7 @@ class Server:
                 conn, addr = n.server.accept()
                 thread = threading.Thread(target=self.handle_client, args=(conn, addr, n))
                 thread.start()
-                print(f"[CONNECIONES ACTIVAS] {threading.activeCount() - 1}")
+                print(f"[CONNECIONES ACTIVAS] {threading.active_count() - 1}")
 
         except Exception as e:
             exception: str = f"{type(e).__name__}: (e)"
