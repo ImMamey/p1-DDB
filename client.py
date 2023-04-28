@@ -1,41 +1,28 @@
 import socket
-import pickle
 
+HEADER = 64
+PORT = 5555
+FORMAT = 'utf-8'
+DISCONNECT_MESSAGE = "!DISCONNECT"
+SERVER = "192.168.56.1"
+ADDR = (SERVER, PORT)
 
-class Network:
-    def __init__(self) -> None:
-        """
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(ADDR)
 
-        :var client
-        """
-        self.client: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #inicia socket TCP
-        self.server: str = socket.gethostname() # guarda IP del server
-        self.port: int = 5555 # puerto para el socket
-        self.addr: tuple = (self.server, self.port) # guarda tupla con datos de (ip, puerto)
-        self.p = self.connect() # inicia connection
+def send(msg):
+    message = msg.encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER - len(send_length))
+    client.send(send_length)
+    client.send(message)
+    print(client.recv(2048).decode(FORMAT))
 
-    def getP(self):
-        return self.p
-    def connect(self):
-        try:
-            self.client.connect(self.addr)
-            return pickle.loads(self.client.recv(2048))
-        except Exception as e:
-            exception: str = f"{type(e).__name__}: (e)"
-            print(f"Fallo al conectarse al cliente. Para mas informacion: \n{exception}")
-    def send(self, data):
-        try:
-            self.client.send(pickle.dumps(pickle.dumps(data)))
-            return pickle.loads(self.client.recv(2048))
-        except Exception as e:
-            exception: str = f"{type(e).__name__}: (e)"
-            print(f"Fallo al enviar packete: \n{exception}")
+send("Hello World!")
+input()
+send("Hello Everyone!")
+input()
+send("Hello Tim!")
 
-def main():
-    run=True
-    n: classmethod = Network()
-    p= n.getP()
-
-    while run:
-        pass
-
+send(DISCONNECT_MESSAGE)
