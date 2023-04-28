@@ -2,19 +2,41 @@ import socket
 import threading
 
 class Server:
+    """
+    Contiene todos los metodos necesarios para inciar un servidor usando Hilos.
+    """
     class Network:
+        """
+        Contiene los atributos del servidor para facil acceso en una subclase anidada. Tambien crea el socket principal
+        """
         def __init__(self)-> None:
-            self.SERVER: str = socket.gethostbyname(socket.gethostname()) # guarda IP del server
+            """
+            :var SERVER: Guarda la IP del servidor
+            :var PORT: Numero de puerto a usar
+            :var ADDR: Tupla con los datos de: ip y numero de puerto
+            :var FORMAT: Formato de encode
+            :var DISCONNECT_MESSAGE: mensaje para la desconección y cierre de sesion.
+            :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje, todos los mensajes seran de 64 bytes. Facilita el encode/decode.
+            :var server: socket del servidor.
+            """
+            self.SERVER: str = socket.gethostbyname(socket.gethostname())
             self.PORT: int = 5555 #purto a usar
-            self.ADDR: tuple = (self.SERVER, self.PORT) # guarda tupla (ip, puerto)
-            self.FORMAT: str = 'utf-8' # encode type
-            self.DISCONNECT_MESSAGE: str= "!DISCONNECT" # mensaje de desconecction
+            self.ADDR: tuple = (self.SERVER, self.PORT)
+            self.FORMAT: str = 'utf-8'
+            self.DISCONNECT_MESSAGE: str= "!DISCONNECT"
             self.HEADER: int =64
 
-            self.server: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # inicia un socket por TCP
+            self.server: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server.bind(self.ADDR)
 
     def handle_client(self, conn, addr,n):
+        """
+        Metodo que maneja clientes, recibe mensajes y envia mensajes de confirmacion
+        :param conn: connecion del socket.
+        :param addr: tupla (ip,socket)
+        :param n: Instancia de clase anidada "network"
+        :return: None
+        """
         print(f"[NUEVA CONNECCION] {addr} connectado.")
 
         connected: bool = True
@@ -29,6 +51,10 @@ class Server:
                 conn.send("[SERVIDOR] Mensaje recibido.".encode(n.FORMAT))
 
     def start(self):
+        """
+        Incia el servidor mediante un try and catch.
+        :return:  None
+        """
         try:
             n = self.Network()
             n.server.listen()
