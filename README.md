@@ -32,8 +32,9 @@
 #### Dependencies:
 * [Python 3.10+](https://www.python.org/downloads/)
 
-#### Dev dependencies and extras:
-* [Mypy](http://mypy-lang.org/) (Optional: for only)
+#### Dev dependencies y extras:
+* [Mypy](http://mypy-lang.org/) (Opcional: solo para dessarrollo)
+* [Poetry](https://python-poetry.org/)
 ---
 ## Installation
 
