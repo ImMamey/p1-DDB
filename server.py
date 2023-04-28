@@ -26,17 +26,23 @@ class Server:
                 if msg == n.DISCONNECT_MESSAGE:
                     connected = False
                 print(f"[{addr}] {msg}")
-                conn.send("Msg recibido".encode(n.FORMAT))
+                conn.send("[SERVIDOR] Mensaje recibido.".encode(n.FORMAT))
 
     def start(self):
-        n = self.Network()
-        n.server.listen()
-        print(f"[Escuchando] Servidor esta escuchando en. {n.SERVER}")
-        while True:
-            conn, addr = n.server.accept()
-            thread = threading.Thread(target=self.handle_client, args=(conn, addr,n))
-            thread.start()
-            print(f"[CONNECIONES ACTIVAS] {threading.activeCount() - 1}")
+        try:
+            n = self.Network()
+            n.server.listen()
+            print(f"El servidor esta activo en la IP: {n.SERVER}\n")
+            print(f"[Escuchando] Servidor esta escuchando...")
+            while True:
+                conn, addr = n.server.accept()
+                thread = threading.Thread(target=self.handle_client, args=(conn, addr, n))
+                thread.start()
+                print(f"[CONNECIONES ACTIVAS] {threading.activeCount() - 1}")
+
+        except Exception as e:
+            exception: str = f"{type(e).__name__}: (e)"
+            print(f"Error al Iniciar el servidor. El error fue: \n{exception}")
 
 
 
