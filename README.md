@@ -1,5 +1,5 @@
 <p align="center">
-    <h1 align="center"/> Practica #1 distribuidos </h1>
+    <h1 align="center"/> Practica #3 distribuidos </h1>
 </p>
 
 
@@ -17,7 +17,7 @@
 
 
 ## Descripción
- Practica #1 de Distribuidos
+ Practica #3 de Distribuidos
 
 
 ---
