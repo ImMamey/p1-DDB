@@ -15,7 +15,6 @@ class Client:
         :var DISCONNECT_MESSAGE: mensaje para la desconneción y cierre de sesion.
         :var SERVER: IP del servidor.
         :var ADDR: tupla con el IP del servidor y puerto del socket.
-
         """
         self.HEADER: int = 64
         self.PORT: int = 5555
@@ -71,7 +70,10 @@ if __name__ == "__main__":
             detente = True
 
     cl = Client(ip)
+    nombre: str = input("Escriba el nombre del cliente:\n")
+    cl.send(str(nombre))
     detente: bool = False
+
 
     while not detente:
         msg: str = input("Escriba un mensaje para enviar al Servidor (escriba \"n\" para detener)\n")
@@ -80,3 +82,4 @@ if __name__ == "__main__":
             cl.send(cl.DISCONNECT_MESSAGE)
         else:
             cl.send(str(msg))
+            print(f"[Enviado] Mensaje enviado al servidor: {msg}")

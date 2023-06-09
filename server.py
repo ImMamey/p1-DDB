@@ -38,17 +38,31 @@ class Server:
         :return: None
         """
         print(f"[NUEVA CONNECCION] {addr} connectado.")
+        primer_mensaje: bool = True
+        esperando_dialogo: bool = True
+        nombre_cliente:str =""
 
         connected: bool = True
         while connected:
             msg_length= conn.recv(n.HEADER).decode(n.FORMAT)
+
             if msg_length:
-                msg_length = int(msg_length)
-                msg = conn.recv(msg_length).decode(n.FORMAT)
-                if msg == n.DISCONNECT_MESSAGE:
-                    connected = False
-                print(f"[{addr}] {msg}")
-                conn.send("[SERVIDOR] Mensaje recibido.".encode(n.FORMAT))
+                if primer_mensaje == True:
+                    msg_length = int(msg_length)
+                    nombre_cliente = conn.recv(msg_length).decode(n.FORMAT)
+                    primer_mensaje = False
+                    print(f"Nombre del cliente connectado: {nombre_cliente}")
+                    conn.send("[SERVIDOR] Conección establecida.".encode(n.FORMAT))
+                else:
+                    msg_length = int(msg_length)
+                    msg = conn.recv(msg_length).decode(n.FORMAT)
+                    if msg == n.DISCONNECT_MESSAGE:
+                        connected = False
+                    print(f"Mensaje recibido del cliente:")
+                    print(f"[{addr},{nombre_cliente}] {msg}")
+                    msg: str = input(f"Escriba un mensaje para enviar al cliente {nombre_cliente}:\n")
+                    conn.send(msg.encode(n.FORMAT))
+
 
     def start(self):
         """
