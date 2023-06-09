@@ -1,209 +1,173 @@
-import socket
-import threading
+
+from functools import reduce
 from dateutil import parser
+import threading
 import datetime
+import socket
 import time
 
-#estructura para guardar los datos de clientes + relojes
+# Vector con los datos para guardar la informacion de clientes con datos de los relojes
 client_data = {}
 
-class Server:
-    """
-    Contiene todos los metodos necesarios para inciar un servidor usando Hilos.
-    """
-    class Network:
-        """
-        Contiene los atributos del servidor para facil acceso en una subclase anidada. Tambien crea el socket principal
-        """
-        def __init__(self)-> None:
-            """
-            :var SERVER: Guarda la IP del servidor
-            :var PORT: Numero de puerto a usar
-            :var ADDR: Tupla con los datos de: ip y numero de puerto
-            :var FORMAT: Formato de encode
-            :var DISCONNECT_MESSAGE: mensaje para la desconección y cierre de sesion.
-            :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje, todos los mensajes seran de 64 bytes. Facilita el encode/decode.
-            :var server: socket del servidor.
-            """
-            # obtener lan ip
-            ips = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ips.connect(("8.8.8.8", 80))
+''' Esta funcion de hilos anidados se usa para recibir los datos del tiempo desde un cliente conectado'''
+
+def startReceivingClockTime(connector, address)->None:
+    '''
+    :param connector: connecion del socket (objeto)
+    :param address: la direccion del cliente/esclavo
+    :return: None
+    '''
+    while True:
+        # Estos datos son para recibir el tiempo de los relojes y guardarlos dentro del array "Client data"
+        clock_time_string = connector.recv(1024).decode()
+        clock_time = parser.parse(clock_time_string)
+        clock_time_diff = datetime.datetime.now() - \
+                          clock_time
+        #se guardan los datos en un objeto dentro de el vector client_data (se usa luego para el algoritmo de berkley)
+        client_data[address] = {
+            "clock_time"	: clock_time,
+            "time_difference" : clock_time_diff,
+            "connector"	 : connector
+        }
+
+        print("Informacion de Clientes ha sido actualizada con:  "+ str(address),
+              end = "\n\n")
+        time.sleep(5)
 
 
-            self.SERVER: str = ips.getsockname()[0]
-            #cerrar  lan ips
-            ips.close()
+''' Este es el hilo principal usado para abrir un partal para aceptar clientes dado un puerto especifico. '''
+def startConnecting(master_server)->None:
+    '''
 
-            self.PORT: int = 5555 #purto a usar
-            self.ADDR: tuple = (self.SERVER, self.PORT)
-            self.FORMAT: str = 'utf-8'
-            self.DISCONNECT_MESSAGE: str= "!DISCONNECT"
-            self.HEADER: int =64
+    :param master_server: Objeto de tipo socket
+    :return: None
+    '''
+    # Actualiza los tiempos de reloj de cada esclavo/clientes
+    # siguiente ciclo acepta cada cliente/esclavo que intente conectarse
+    while True:
+        master_slave_connector, addr = master_server.accept()
+        slave_address = str(addr[0]) + ":" + str(addr[1])
 
-            self.server: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.server.bind(self.ADDR)
-            self.initiateClocks()
+        print(slave_address + " se ha conectado satisfacotiramente.")
 
-        def startReceivingClockTime(self,connector, address):
-            while True:
-                # recibir el tiempo del reloj
-                clock_time_string = connector.recv(1024).decode()
-                clock_time = parser.parse(clock_time_string)
-                clock_time_diff = datetime.datetime.now() - \
-                                  clock_time
-
-                client_data[address] = {
-                    "clock_time": clock_time,
-                    "time_difference": clock_time_diff,
-                    "connector"	: connector
-                }
-
-                print("Client Data updated with:   "+ str(address),
-                      end = "\n\n")
-                time.sleep(5)
-
-
-        #thread principal para crear un portal para aceptar clientes
-        def startConnecting(self,master_server):
-            # Actualizar relojes de los esclavos/clientes
-            while True:
-                # aceptando a los clientes
-                master_slave_connector, addr = master_server.accept()
-                slave_address = str(addr[0]) + ":" + str(addr[1])
-
-                print(slave_address + " se conectó satisfacotiramente")
-
-                current_thread = threading.Thread(
-                    target=self.startReceivingClockTime,
-                    args=(master_slave_connector,
-                          slave_address,))
-                current_thread.start()
-
-        def getAverageClockDiff(self):
-
-            current_client_data = client_data.copy()
-
-            time_difference_list = list(client['time_difference']
-                                        for client_addr, client
-                                        in client_data.items())
-
-            sum_of_clock_difference = sum(time_difference_list, \
-                                          datetime.timedelta(0, 0))
-
-            average_clock_difference = sum_of_clock_difference \
-                                       / len(client_data)
-
-            return average_clock_difference
-
-        def synchronizeAllCloxks(self):
-
-            while True:
-                print("Nuevo ciclo de sincronizacion ha empezado")
-                print("Nero de clientes sincronizados: " + \
-                      str(len(client_data)))
-
-                if len(client_data) > 0:
-
-                    average_clock_difference = self.getAverageClockDiff()
-
-                    for client_addr, client in client_data.items():
-                        try:
-                            synchronized_time = \
-                                datetime.datetime.now() + \
-                                average_clock_difference
-
-                            client['connector'].send(str(
-                                synchronized_time).encode())
-
-                        except Exception as e:
-                            print("Algo ocurrio " + \
-                                  "mientras se enviaba los tiempos sincronizados " + \
-                                  "atravez de: " + str(client_addr))
-
-                else:
-                    print("No client data." + \
-                          " Synchronization not applicable.")
-
-                print("\n\n")
-
-                time.sleep(5)
-
-        # metodo creea conecciones
-        def initiateClocks(self):
-            #creando conneccciones
-            print("Creando las conecciones...\n")
-            master_thread = threading.Thread(
-                target=self.startConnecting,
-                args=(self.server,))
-            master_thread.start()
-
-            #inicia sincronización
-            print("Starting synchronization parallelly...\n")
-            sync_thread = threading.Thread(
-                target=self.synchronizeAllClocks,
-                args=())
-            sync_thread.start()
+        current_thread = threading.Thread(
+            target = startReceivingClockTime,
+            args = (master_slave_connector,
+                    slave_address, ))
+        current_thread.start()
 
 
 
-    def handle_client(self, conn, addr,n):
-        """
-        Metodo que maneja clientes, recibe mensajes y envia mensajes de confirmacion
-        :param conn: connecion del socket.
-        :param addr: tupla (ip,socket)
-        :param n: Instancia de clase anidada "network"
-        :return: None
-        """
-        print(f"[NUEVA CONNECCION] {addr} connectado.")
-        primer_mensaje: bool = True
-        esperando_dialogo: bool = True
-        nombre_cliente:str =""
+"""Subrutina para guardar la media entre los relojes. Esta subrutina ejecuta al algoritmo de Berkeley."""
+def getAverageClockDiff():
+    #Creamos una copia del vector con la informacion de los relojes
+    current_client_data = client_data.copy()
 
-        connected: bool = True
-        while connected:
-            msg_length= conn.recv(n.HEADER).decode(n.FORMAT)
+    #creamos una lista con la diferencia de tiempos por cada objeto de clientes.
+    time_difference_list = list(client['time_difference']
+                                for client_addr, client
+                                in client_data.items())
 
-            if msg_length:
-                if primer_mensaje == True:
-                    msg_length = int(msg_length)
-                    nombre_cliente = conn.recv(msg_length).decode(n.FORMAT)
-                    primer_mensaje = False
-                    print(f"Nombre del cliente connectado: {nombre_cliente}")
-                    conn.send("[SERVIDOR] Conección establecida.".encode(n.FORMAT))
-                else:
-                    msg_length = int(msg_length)
-                    msg = conn.recv(msg_length).decode(n.FORMAT)
-                    if msg == n.DISCONNECT_MESSAGE:
-                        connected = False
-                    print(f"Mensaje recibido del cliente:")
-                    print(f"[{addr},{nombre_cliente}] {msg}")
-                    msg: str = input(f"Escriba un mensaje para enviar al cliente {nombre_cliente}:\n")
-                    conn.send(msg.encode(n.FORMAT))
+    #Hacemos una sumatoria de los mismos
+    sum_of_clock_difference = sum(time_difference_list, \
+                                  datetime.timedelta(0, 0))
+    #creamos la media de todos los relojes.
+    average_clock_difference = sum_of_clock_difference \
+                               / len(client_data)
+    #devolvemos la media de los relojes
+    return average_clock_difference
 
 
-    def start(self):
-        """
-        Incia el servidor mediante un try and catch.
-        :return:  None
-        """
-        try:
-            n = self.Network()
-            n.server.listen()
-            print(f"El servidor esta activo en la IP: {n.SERVER}\n")
-            print(f"[Escuchando] Servidor esta escuchando...")
-            while True:
-                conn, addr = n.server.accept()
-                thread = threading.Thread(target=self.handle_client, args=(conn, addr, n))
-                thread.start()
-                print(f"[CONNECIONES ACTIVAS] {threading.active_count() - 1}")
+''' Este hilo se usa para genera ciclos de sincronizacion en la red. '''
+def synchronizeAllClocks():
 
-        except Exception as e:
-            exception: str = f"{type(e).__name__}: (e)"
-            print(f"Error al Iniciar el servidor. El error fue: \n{exception}")
+    while True:
+
+        print("Nuevo ciclo de sincronización ha empezado.")
+        print("Numero de clientes a ser sincronizados:" + \
+              str(len(client_data)))
+
+        #empieza la sincronización por cada item cliente dentro del vector de clientes.
+        if len(client_data) > 0:
+            #guardamos el valor de la media de los relojes
+            average_clock_difference = getAverageClockDiff()
+
+            for client_addr, client in client_data.items():
+                # por cada cliente, enviamos el valor del reloj sincronizados
+                try:
+                    synchronized_time = \
+                        datetime.datetime.now() + \
+                        average_clock_difference
+
+                    client['connector'].send(str(
+                        synchronized_time).encode())
+
+                except Exception as e:
+                    print("Algo ocurrió cuando" + \
+                          "se intento enviar el tiempo sincronizado " + \
+                          "hacia: " + str(client_addr))
+
+        else :
+            print("No hay informacion de clientes" + \
+                  " La sincronización no es aplicable.")
+
+        print("\n\n")
+
+        time.sleep(5)
+
+
+"""Esta funcion se usa para inciar el reloj del servidor/maestro"""
+def initiateClockServer(port = 5050):
+    #aqui creamos el socket para nuestro servidor/nodo maestro.
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+
+
+    master_server = socket.socket()
+    master_server.setsockopt(socket.SOL_SOCKET,
+                             socket.SO_REUSEADDR, 1)
+
+    print("[INICIANDO SERVIDOR] el servidor ha iniciado....\n")
+    print(f"El servidor ha iniciado en la siguiente ip: ", IP)
+    master_server.bind((IP, port))
+
+    # Esperando conecciones
+    print(f"[Escuchando] Servidor esta escuchando...")
+    master_server.listen(10)
+    print("El reloj del servidor ah iniciado...\n")
+
+    # start making connections
+    print("Creando conneciones\n")
+    master_thread = threading.Thread(
+        target = startConnecting,
+        args = (master_server, ))
+    master_thread.start()
+
+    # start synchronization
+    print("Iniciando conneciones paralelas..\n")
+    sync_thread = threading.Thread(
+        target = synchronizeAllClocks,
+        args = ())
+    sync_thread.start()
+
+import socket
+
+
+"""Funcion usada para obtener el IP de la maquina actual para la creacion del socket."""
 
 
 
-if __name__ =="__main__":
-    print("[INICIANDO SERVIDOR] el servidor está iniciando....")
-    s = Server()
-    s.start()
+# Driver function
+if __name__ == '__main__':
+    print("[INICIANDO SERVIDOR] el servidor esta iniciando")
+    # Trigger the Clock Server
+    initiateClockServer(port = 5050)
