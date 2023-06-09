@@ -1,5 +1,11 @@
 import socket
 import threading
+from dateutil import parser
+import datetime
+import time
+
+#estructura para guardar los datos de clientes + relojes
+client_data = {}
 
 class Server:
     """
@@ -36,6 +42,109 @@ class Server:
 
             self.server: socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server.bind(self.ADDR)
+            self.initiateClocks()
+
+        def startReceivingClockTime(self,connector, address):
+            while True:
+                # recibir el tiempo del reloj
+                clock_time_string = connector.recv(1024).decode()
+                clock_time = parser.parse(clock_time_string)
+                clock_time_diff = datetime.datetime.now() - \
+                                  clock_time
+
+                client_data[address] = {
+                    "clock_time": clock_time,
+                    "time_difference": clock_time_diff,
+                    "connector"	: connector
+                }
+
+                print("Client Data updated with:   "+ str(address),
+                      end = "\n\n")
+                time.sleep(5)
+
+
+        #thread principal para crear un portal para aceptar clientes
+        def startConnecting(self,master_server):
+            # Actualizar relojes de los esclavos/clientes
+            while True:
+                # aceptando a los clientes
+                master_slave_connector, addr = master_server.accept()
+                slave_address = str(addr[0]) + ":" + str(addr[1])
+
+                print(slave_address + " se conectó satisfacotiramente")
+
+                current_thread = threading.Thread(
+                    target=self.startReceivingClockTime,
+                    args=(master_slave_connector,
+                          slave_address,))
+                current_thread.start()
+
+        def getAverageClockDiff(self):
+
+            current_client_data = client_data.copy()
+
+            time_difference_list = list(client['time_difference']
+                                        for client_addr, client
+                                        in client_data.items())
+
+            sum_of_clock_difference = sum(time_difference_list, \
+                                          datetime.timedelta(0, 0))
+
+            average_clock_difference = sum_of_clock_difference \
+                                       / len(client_data)
+
+            return average_clock_difference
+
+        def synchronizeAllCloxks(self):
+
+            while True:
+                print("Nuevo ciclo de sincronizacion ha empezado")
+                print("Nero de clientes sincronizados: " + \
+                      str(len(client_data)))
+
+                if len(client_data) > 0:
+
+                    average_clock_difference = self.getAverageClockDiff()
+
+                    for client_addr, client in client_data.items():
+                        try:
+                            synchronized_time = \
+                                datetime.datetime.now() + \
+                                average_clock_difference
+
+                            client['connector'].send(str(
+                                synchronized_time).encode())
+
+                        except Exception as e:
+                            print("Algo ocurrio " + \
+                                  "mientras se enviaba los tiempos sincronizados " + \
+                                  "atravez de: " + str(client_addr))
+
+                else:
+                    print("No client data." + \
+                          " Synchronization not applicable.")
+
+                print("\n\n")
+
+                time.sleep(5)
+
+        # metodo creea conecciones
+        def initiateClocks(self):
+            #creando conneccciones
+            print("Creando las conecciones...\n")
+            master_thread = threading.Thread(
+                target=self.startConnecting,
+                args=(self.server,))
+            master_thread.start()
+
+            #inicia sincronización
+            print("Starting synchronization parallelly...\n")
+            sync_thread = threading.Thread(
+                target=self.synchronizeAllClocks,
+                args=())
+            sync_thread.start()
+
+
 
     def handle_client(self, conn, addr,n):
         """

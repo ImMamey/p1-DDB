@@ -8,6 +8,7 @@ packages = [{include = "p1_ddb"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+python-dateutil = "^2.8.2"
 
 
 [tool.poetry.group.dev.dependencies]
