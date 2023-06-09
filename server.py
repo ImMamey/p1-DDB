@@ -19,7 +19,15 @@ class Server:
             :var HEADER: Numero de bytes usado para algoritmo logico = como no sabemos cual es el tamaño de cada mensaje, todos los mensajes seran de 64 bytes. Facilita el encode/decode.
             :var server: socket del servidor.
             """
-            self.SERVER: str = socket.gethostbyname(socket.gethostname())
+            # obtener lan ip
+            ips = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            ips.connect(("8.8.8.8", 80))
+
+
+            self.SERVER: str = ips.getsockname()[0]
+            #cerrar  lan ips
+            ips.close()
+
             self.PORT: int = 5555 #purto a usar
             self.ADDR: tuple = (self.SERVER, self.PORT)
             self.FORMAT: str = 'utf-8'
